@@ -48,6 +48,8 @@
 #include "SEGGER_RTT.h"
 #endif
 
+#include "driver/gpio.h"
+
 #if CONFIG_ESP32_APPTRACE_ONPANIC_HOST_FLUSH_TMO == -1
 #define APPTRACE_ONPANIC_HOST_FLUSH_TMO   ESP_APPTRACE_TMO_INFINITE
 #else
@@ -160,6 +162,9 @@ static __attribute__((noreturn)) inline void invoke_abort()
 
 void abort()
 {
+    // Note: set TAS5825M power pin (GPIO_NUM_27) to off state (0)
+    gpio_set_level(GPIO_NUM_27, 0);
+
 #if !CONFIG_ESP32_PANIC_SILENT_REBOOT
     ets_printf("abort() was called at PC 0x%08x on core %d\r\n", (intptr_t)__builtin_return_address(0) - 3, xPortGetCoreID());
 #endif
@@ -220,6 +225,9 @@ static volatile XtExcFrame * other_core_frame = NULL;
 
 void panicHandler(XtExcFrame *frame)
 {
+    // Note: set TAS5825M power pin (GPIO_NUM_27) to off state (0)
+    gpio_set_level(GPIO_NUM_27, 0);
+
     int core_id = xPortGetCoreID();
     //Please keep in sync with PANIC_RSN_* defines
     const char *reasons[] = {
